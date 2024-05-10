@@ -1,11 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <title>MOVIE</title>
+    <!-- <link rel="stylesheet" type="text/css" href="public/css/style.css"> -->
+    <style>
+        form[name="total_search"] {
+                display: block;
+                margin: 0 auto;
+                width: 800px;
+            }
 
-</head>
+        h1 {
+            text-align: center;
+        }
+        
+        body {
+            display: block;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+            margin: 0;
+        }
 
-<body>
+        .search {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        input[type="radio"] {
+            margin-right: 5px;
+        }
+        input[type="search"]
+         {
+            padding: 10px;
+            margin-top: 10px;
+            width: 650px;
+        }
+
+        
+        input[type="submit"] {
+            padding: 10px;
+            margin-top: 10px;
+            margin-left: 10px;
+            width: 100px;
+        }
+
+        .movie_list {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 800px; /* 가로 크기를 600px로 설정 */
+                margin: 0 auto; /* 페이지 중앙에 위치하도록 설정 */
+            }
+                .movies-container {
+                margin: 10px;
+                flex-basis: calc(33.333% - 20px);
+                box-sizing: border-box;
+                text-align: center;
+                }
+
+                /* 화면 크기에 따른 반응형 디자인을 위한 코드 */
+                @media (max-width: 600px) {
+                .movies-container {
+                    flex-basis: calc(50% - 20px);
+                }
+                }
+
+                @media (max-width: 400px) {
+                .movies-container {
+                    flex-basis: 100%;
+                }
+                }
+
+
+        .infomation {
+            margin-top: 5px; /* 원하는 간격 조정 */
+        }
+
+        .movie_title {
+            margin-top: 10px;
+        }
+
+        .movies-container:nth-child(3n) {
+            margin-right: 0;
+        }
+
+        .movies-container input[type="button"] {
+            margin-top: 20px; /* 원하는 간격 조정 */
+        }
+
+        .ticketing {
+            padding: 20px 0;
+        }
+
+        input[type="button"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+
+            margin-top: 10px;
+        }
+
+        input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        .container,
+        .userEval {
+            margin: 0 auto; /* 페이지 중앙에 위치하도록 설정 */
+            display: block; /* 블록 레벨 요소로 설정 */
+            margin-top: 100px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px black;
+            padding: 20px;
+            width: 800px;
+            overflow-y: auto;
+
+        }
+
+        .container .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .container .ticket-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .container .ticket-item:last-child {
+            margin-bottom: 20px;
+        }
+
+        .container .ticket-title {
+            font-size: 14px;
+            font-weight: bold;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            margin-right: 100px;
+        }
+
+        .container .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .container .btn-change {
+            background-color: #aeaeae;
+            color: black;
+            position: absolute;
+            right: 60px;
+        }
+
+        .container .btn-cancel {
+            background-color: #e57373;
+            color: white;
+            position: absolute;
+            right: 10px;
+        }
+
+        .container .btn-cancel-all {
+            background-color: #ff5252;
+            font-weight: bold;
+            color: white;
+            width: 100%;
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .userEval {
+            border: solid black 1px;
+            width: 800px;
+            height: 400px;
+        }
+
+
+        h2 {
+            text-align: center;
+        }
+
+        #content {
+            width: 470px;
+            height: 250px;
+            margin-left: 20px;
+        }
+
+        #save {
+            margin-top: 20px;
+            margin-left: 420px;
+            width: 80px;
+            height: 25px;
+        }
+
+        .input-container {
+            display: flex;
+            margin-left: 20px;
+        }
+
+        .box-office-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .box-office-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+        .box-office-rank {
+            font-weight: bold;
+        }
+        .box-office-title {
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+    </style>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
+    <script>
+        window.onload = () => {
+            let reserveButtons = document.querySelectorAll(".submit-button");
+
+    reserveButtons.forEach(button => {
+        button.addEventListener("click", function(event) {
+            let movieTitle = this.getAttribute("data-movie-title");
+            let director = this.getAttribute("data-director");
+            let cast = this.getAttribute("data-cast");
+            let action = this.getAttribute("data-action");
+
+            // 여기서 서버로 전송할 정보를 가지고 AJAX 요청을 보낼 수 있습니다.
+            // 예를 들어 axios를 사용하여 서버로 POST 요청을 보낼 수 있습니다.
+
+            axios.post("/reserve", {
+                movieTitle: movieTitle,
+                director: director,
+                cast: cast,
+                action: action
+            })
+            .then(function (response) {
+                console.log(response);
+                // 서버 응답 처리 등
+            })
+            .catch(function (error) {
+                console.log(error);
+                // 오류 처리 등
+            });
+        });
+    });
+};
+    </script>
+
+<script>
+    // KOFIC API 키
+    const API_KEY = '0aa2ccb1306f5582b1e0973d1442641d';
+
+    // 어제 날짜를 'YYYYMMDD' 형식으로 가져오는 함수
+    function getYesterdayDate() {
+        const today = new Date();
+        today.setDate(today.getDate() - 1);
+        const yyyy = today.getFullYear().toString();
+        const mm = (today.getMonth() + 1).toString().padStart(2, '0');
+        const dd = today.getDate().toString().padStart(2, '0');
+        return yyyy + mm + dd;
+    }
+
+    // 박스오피스 데이터를 가져와서 HTML로 표시하는 함수
+    async function fetchBoxOffice() {
+        const targetDate = getYesterdayDate();
+        const url = `https://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=${API_KEY}&targetDt=${targetDate}`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const boxOfficeList = data.boxOfficeResult.dailyBoxOfficeList;
+
+            const boxOfficeListElement = document.getElementById('boxOfficeList');
+            boxOfficeListElement.innerHTML = '';
+
+            boxOfficeList.forEach(movie => {
+                const listItem = document.createElement('li');
+                listItem.className = 'box-office-item';
+                listItem.innerHTML = `
+                    <div class="box-office-rank">${movie.rank}위</div>
+                    <div class="box-office-title">${movie.movieNm}</div>
+                `;
+                boxOfficeListElement.appendChild(listItem);
+            });
+        } catch (error) {
+            console.error('Error fetching box office data:', error);
+        }
+    }
+
+    // 박스오피스 데이터 가져오기
+    fetchBoxOffice();
+</script>
+</head>
+<body>
+    <h1>Movie Ticket</h1>
+
+    <div class="container">
+        <div class="title">오늘의 박스오피스 순위</div>
+        <ul class="box-office-list" id="boxOfficeList">
+            <!-- 박스오피스 순위 목록이 여기에 추가됩니다 -->
+        </ul>
+        </div>
+    
+    <!-- 검색창 -->
+
+    <h2>영화 검색</h2>
+    
+    <form name="total_search" method="get">
+        <fieldset>
+            <div>
+                <label class="search">
+                    <input type="radio" name="search_index" value="title">영화 제목
+                </label>
+                <label class="search">
+                    <input type="radio" name="search_index" value="manager">영화 감독
+                </label>
+                <br>
+                <input type="search" title="검색" class="input_box">
+                <input type="submit" value="검색" title="전송">
+            </div>
+        </fieldset>
+    </form>
+
+    <!-- 영화 목록 -->
+    <h2 style="text-align: center;">상영 중인 영화</h2>
+    
+    <div class="movie_list">
+            <div class="movies-container">
+                <input type="image" width="150px" height="170px" src="https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNDAyMjFfMTkz%2FMDAxNzA4NDQ5NTI3NTE2.R4uD-evRoUa10CYHwzlhOliiOjmdBTj7LBkrBU9Q7Xcg.eMIjWcyoZE_SiVJFJ43cyAhQ2kTqcz_W-RoFNO32Tjcg.JPEG%2FIMG_5846.jpg&type=a340" alt="영화">
+                <div class="movie_title">파묘</div>
+                <div class="infomation">감독: 장재현, 출연: 김고은, 이도현, 연출: 많다...</div>
+                <input type="button" class="submit-button" value="예매" data-movie-title="파묘" data-director="장재현" data-cast="누구누구" data-action="어쩌고">
+            </div>
+        
+            <div class="movies-container">
+                <input type="image" width="150px" height="170px" src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQprZFHUzORH1V2j21GJQFQRxRQEBFyzWv_263uCPU7WfqeGzm0" alt="영화">
+                <div class="movie_title">범죄도시4</div>
+                <div class="infomation">감독: 허명행, 출연: 마동석, 연출: 많다...</div>
+                <input type="button" class="submit-button" value="예매" data-movie-title="범죄도시4" data-director="허명행" data-cast="마동석" data-action="어쩌고">
+            </div>
+
+            <div class="movies-container">
+                <input type="image" width="150px" height="170px" src="https://i.namu.wiki/i/pK7slXaKq50l06uX7eKctFI1AwHxVB_DhT4lL5Am7-4VanFlZV8DD1NGEp89W6b-CI7kMMxNYzZG74yPF_VZjtG3tp8hy1JAPBI2xfJe8B7aiYs9uqKFb5ud4Uxgg4lS6OyZzfeVKvtRz2L0GiuDDA.webp" alt="영화">
+                <div class="movie_title">극장판 하이큐!! 쓰레기장의 결전</div>
+                <div class="infomation">감독: 미츠나카 스스무, 성우: 누구누구, 원작: 후루다테 하루이치</div>
+                <input type="button" class="submit-button" value="예매" data-movie-title="극장판 하이큐!! 쓰레기장의 결전" data-director="미츠나카 스스무" data-cast="누구누구" data-action="어쩌고">
+            </div>
+
+            <div class="movies-container">
+                <input type="image" width="150px" height="170px" src="https://search.pstatic.net/common/?src=http%3A%2F%2Fblogfiles.naver.net%2FMjAyNDAyMjFfMTkz%2FMDAxNzA4NDQ5NTI3NTE2.R4uD-evRoUa10CYHwzlhOliiOjmdBTj7LBkrBU9Q7Xcg.eMIjWcyoZE_SiVJFJ43cyAhQ2kTqcz_W-RoFNO32Tjcg.JPEG%2FIMG_5846.jpg&type=a340" alt="영화">
+                <div class="movie_title">혹성탈출: 새로운 시대</div>
+                <div class="infomation">감독: 웨스 볼, 출연: 오웬 티, 연출: </div>
+                <input type="button" class="submit-button" value="예매" data-movie-title="혹성탈출: 새로운 시대" data-director="웨스 볼" data-cast="오웬 티" data-action="어쩌고">
+            </div>
+
+            <div class="movies-container">
+                <input type="image" width="150px" height="170px" src="https://i.namu.wiki/i/p0tUK1XEYUBgmRn8NJd2OfjftODQNFc59id1b1hgNrvtLjaOS4Zc25H1QjwBdoX1cQUJdHyvA7ooDZOXuT4wsRV89AeXhAPB9ILLLIp779vnxG-A80Nd3nEg-4moi8meftqabUGvJWHbhfbQUqTRyQ.webp" alt="영화">
+                <div class="movie_title">쿵푸팬더4</div>
+                <div class="infomation">감독: 마이크 미첼, 스테파니 스타인, 출연: 잭 블랙, 아콰피나 등, 연출: 어쩌고</div>
+                <input type="button" class="submit-button" value="예매" data-movie-title="쿵푸팬더4" data-director="마이크 미첼" data-cast="잭 블랙" data-action="어쩌고">
+            </div>
+
+            <div class="movies-container">
+                <input type="image" width="150px" height="170px" src="https://i.namu.wiki/i/Bay5idqb81FB_bhifoKrPWtjDAZZFI963kVG3Rh3FKeJ9vMQDWytMQy5JY-7zJVEyfa2mpF5nYZWg7A3pbPflxDmYZ6Zuz0jH6mQLXPodsUDWZGouKkaYE5KdNsDBWPlQDvVk2mSAcIe8ejk1V-_6A.webp" alt="영화">
+                <div class="movie_title">남은 인생 10년</div>
+                <div class="infomation">감독: 후지이 미치히토, 출연: 코마츠 나나, 사카구치 켄타로, 연출: 어쩌고</div>
+                <input type="button" class="submit-button" value="예매" data-movie-title="남은 인생 10년" data-director="후지이 미치히토" data-cast="누구누구" data-action="어쩌고">
+            </div>
+        </div>
+    </div>
+
+    <!-- 예매 내역 -->
+
+    <div class="container">
+        <div class="title">예매 내역</div>
+
+        <ul>
+            <li id='list'>
+                <div class="ticket-item" id="0">
+                    <div class="ticket-title">범죄 도시 4</div>
+                    <button class="btn btn-change">변경</button>
+                    <button class="btn btn-cancel">취소</button>
+                </div>
+
+                <div class="ticket-item" id="1">
+                    <div class="ticket-title">쿵푸 팬더 4</div>
+                    <button class="btn btn-change">변경</button>
+                    <button class="btn btn-cancel">취소</button>
+                </div>
+
+                <div class="ticket-item" id="2">
+                    <div class="ticket-title">가나다라마바사아자차카타파하123456789</div>
+                    <button class="btn btn-change">변경</button>
+                    <button class="btn btn-cancel">취소</button>
+                </div>
+
+                <div class="ticket-item" id="3">
+                    <div class="ticket-title">영화 제목</div>
+                    <button class="btn btn-change">변경</button>
+                    <button class="btn btn-cancel">취소</button>
+                </div>
+            </li>
+        </ul>
+        <button class="btn-cancel-all">전체 취소</button>
+        <!-- <input type="btn-cancel-all" id="submit" value="전체 취소"> -->
+    </div>
+    
+    <!-- 사용자 평 -->
+    <div class="userEval">
+        <h2>사용자 평</h2>
+        <div class="input-container">
+            <input type="file" id="fileUpload">
+            <textarea cols="30" rows="30" id="content" placeholder="감상평을 공유해 주세요!"></textarea>
+        </div>
+        <button id="save" onclick="saveContent()">저장</button>
+    </div>
+
 </body>
 </html>
