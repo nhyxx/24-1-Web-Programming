@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Ticketflix</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
+    />
+
+    <!-- 폰트 적용 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // KOFIC API 키
+      const API_KEY = "0aa2ccb1306f5582b1e0973d1442641d";
+
+      function getYesterdayDate() {
+        const today = new Date();
+        today.setDate(today.getDate() - 1);
+        const yyyy = today.getFullYear().toString();
+        const mm = (today.getMonth() + 1).toString().padStart(2, "0");
+        const dd = today.getDate().toString().padStart(2, "0");
+        return yyyy + mm + dd;
+      }
+
+      // 박스오피스 데이터를 가져와서 HTML로 표시하는 함수
+      async function fetchBoxOffice() {
+        const targetDate = getYesterdayDate();
+        const url = `https://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json?key=${API_KEY}&targetDt=${targetDate}`;
+
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+
+          const boxOfficeList = data.boxOfficeResult.dailyBoxOfficeList.slice(
+            0,
+            5
+          ); // 최대 5개 항목만 선택
+
+          const boxOfficeListElement = document.getElementById("boxOfficeList");
+          boxOfficeListElement.innerHTML = "";
+
+          boxOfficeList.forEach((movie) => {
+            const listItem = document.createElement("li");
+            listItem.className = "box-office-item";
+            listItem.innerHTML = `
+                        <div class="box-office-rank">${movie.rank}위</div>
+                        <div class="box-office-title">${movie.movieNm}</div>
+                    `;
+            boxOfficeListElement.appendChild(listItem);
+          });
+        } catch (error) {
+          console.error("Error fetching box office data:", error);
+        }
+      }
+
+      // 영화 포스터를 누르면 영화 정보를 팝업창에 표시하는 함수
+      function openPopup(movieTitle, director, cast, summary) {
+        var modal = document.getElementById("movieModal");
+        var titleElement = document.getElementById("movieTitle");
+        var directorElement = document.getElementById("movieDirector");
+        var castElement = document.getElementById("movieCast");
+        var summaryElement = document.getElementById("movieSummary");
+        var reserveButton = modal.querySelector(".submit-button");
+
+        titleElement.textContent = movieTitle;
+        directorElement.textContent = director;
+        castElement.textContent = cast;
+        summaryElement.textContent = summary;
+
+        reserveButton.setAttribute("data-movie-title", movieTitle);
+        reserveButton.setAttribute("data-director", director);
+        reserveButton.setAttribute("data-cast", cast);
+        reserveButton.setAttribute("data-summary", summary);
+
+        // 날짜 선택기 초기화
+        $("#datePicker").datepicker({
+          dateFormat: "yy-mm-dd",
+          minDate: 0,
+          onSelect: function (dateText) {
+            fetchMovieTimes(dateText);
+          },
+        });
+
+        modal.style.display = "block";
+      }
+
+      function closeModal() {
+        var modal = document.getElementById("movieModal");
+        modal.style.display = "none";
+      }
+
+      //시간 선택 로직
+      async function fetchMovieTimes(date) {
+        try {
+          const response = await axios.get(`/movie-times?date=${date}`);
+          const timeSelect = document.getElementById("timeSelect");
+          timeSelect.innerHTML =
+            '<option value="">시간 선택</option>' +
+            response.data.times
+              .map((time) => `<option value="${time}">${time}</option>`)
+              .join("");
+          timeSelect.disabled = false;
+        } catch (error) {
+          console.error("Failed to fetch movie times:", error);
+        }
+      }
+
+      // 예매 내역을 가져와서 HTML로 표시하는 함수
+      async function fetchReservations() {
+        try {
+          const response = await axios.get("/reservations");
+          const data = response.data;
+          console.log("Reservations data:", data);
+          if (data.success) {
+            const reservationsListElement =
+              document.getElementById("reservationsList");
+            reservationsListElement.innerHTML = "";
+
+            data.reservations.forEach((reservation, index) => {
+              const listItem = document.createElement("li");
+              listItem.className = "reservation-item";
+              listItem.innerHTML = `
+                            <div>
+                                <div class="reservation-movie-title">${
+                                  reservation.movieTitle
+                                }</div>
+                                <div class="reservation-details">감독: ${
+                                  reservation.director
+                                }, 출연: ${reservation.cast}</div>
+                                <div class="reservation-date">예매일: ${new Date(
+                                  reservation.date
+                                ).toLocaleString()}</div>
+                                <div class="reservation-viewing-date">관람일자: ${new Date(
+                                  reservation.viewdate
+                                ).toLocaleDateString()} ${
+                reservation.viewtime
+              }</div>
+                            </div>
+                            <button class="btn btn-cancel" data-reservation-id="${index}">취소</button>
+                        `;
+              reservationsListElement.appendChild(listItem);
+            });
+
+            document.querySelectorAll(".btn-cancel").forEach((button) => {
+              button.addEventListener("click", async function () {
+                const reservationId = this.getAttribute("data-reservation-id");
+                try {
+                  const response = await axios.post("/cancel-reservation", {
+                    reservationId,
+                  });
+                  if (response.data.success) {
+                    alert("예매가 취소되었습니다.");
+                    fetchReservations();
+                  } else {
+                    alert("예매 취소 실패: " + response.data.message);
+                  }
+                } catch (error) {
+                  console.error("Error cancelling reservation:", error);
+                  alert("예매 취소 중 오류가 발생했습니다.");
+                }
+              });
+            });
+          } else {
+            console.error("Failed to fetch reservations:", data.message);
+          }
+        } catch (error) {
+          console.error("Error fetching reservations:", error);
+        }
+      }
+
+      // 전체 예매 취소 함수
+      async function cancelAllReservations() {
+        try {
+          const response = await axios.post("/cancel-all-reservations");
+          if (response.data.success) {
+            alert("모든 예매가 취소되었습니다.");
+            fetchReservations();
+          } else {
+            alert("전체 예매 취소 실패: " + response.data.message);
+          }
+        } catch (error) {
+          console.error("Error cancelling all reservations:", error);
+          alert("전체 예매 취소 중 오류가 발생했습니다.");
+        }
+      }
+
+      // 예매하기
+      async function reserveMovie(forceReservation = false) {
+        const movieTitle = document.getElementById("movieTitle").textContent;
+        const director = document.getElementById("movieDirector").textContent;
+        const cast = document.getElementById("movieCast").textContent;
+        const summary = document.getElementById("movieSummary").textContent;
+        const viewdate = document.getElementById("datePicker").value;
+        const viewtime = document.getElementById("timeSelect").value;
+
+        if (!viewdate || !viewtime) {
+          alert("날짜와 시간을 선택해주세요.");
+          return;
+        }
+
+        try {
+          const response = await axios.post("/reserve", {
+            movieTitle,
+            director,
+            cast,
+            summary,
+            viewdate,
+            viewtime,
+            forceReservation,
+          });
+
+          alert(response.data.message);
+          if (response.data.success) {
+            closeModal();
+            fetchReservations();
+          }
+        } catch (error) {
+          console.error("Error making reservation:", error);
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.conflict
+          ) {
+            const userConfirmed = confirm(error.response.data.message);
+            if (userConfirmed) {
+              reserveMovie(true); // 강제 예매 진행
+            }
+          } else {
+            alert(
+              error.response.data.message ||
+                "An error occurred while making the reservation."
+            );
+          }
+        }
+      }
+
+      // 페이지가 로드되면 박스오피스와 예매 내역을 가져옴
+      window.onload = () => {
+        fetchBoxOffice();
+        fetchReservations();
+
+        let reserveButtons = document.querySelectorAll(".submit-button");
+        reserveButtons.forEach((button) => {
+          button.addEventListener("click", function (event) {
+            let movieTitle = this.getAttribute("data-movie-title");
+            let director = this.getAttribute("data-director");
+            let cast = this.getAttribute("data-cast");
+            let viewdate = document.getElementById("datePicker").value;
+            let viewtime = document.getElementById("timeSelect").value;
+            if (!viewdate || !viewtime) {
+              alert("시간과 날짜를 선택해주세요");
+              return;
+            }
+
+            axios
+              .post("/reserve", {
+                movieTitle: movieTitle,
+                director: director,
+                cast: cast,
+                viewdate: viewdate,
+                viewtime: viewtime,
+              })
+              .then(function (response) {
+                console.log(response);
+                if (response.data.success) {
+                  alert("예매가 완료되었습니다.");
+                  fetchReservations(); // 예매 후 예매 내역 갱신
+                } else {
+                  alert("예매 실패: " + response.data.message);
+                }
+              })
+              .catch(function (error) {
+                console.log(error);
+                if (
+                  error.response &&
+                  error.response.data &&
+                  error.response.data.conflict
+                ) {
+                  const userConfirmed = confirm(error.response.data.message);
+                  if (userConfirmed) {
+                    reserveMovie(true); // 강제 예매 진행
+                  }
+                } else {
+                  alert("예매 중 오류가 발생했습니다.");
+                }
+              });
+          });
+        });
+      };
+    </script>
+
+    <script>
+      function opensearch() {
+        document.getElementById("searchModal").style.display = "block";
+      }
+
+      function closesearch() {
+        document.getElementById("searchModal").style.display = "none";
+      }
+    </script>
+  </head>
+  <body>
+    <script>
+      function logout() {
+        fetch("/logout", { method: "POST" })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              console.log("로그아웃 성공");
+              window.location.href = "/";
+            } else {
+              console.log("로그아웃 실패:", data.message);
+            }
+          })
+          .catch((error) => console.error("Error:", error));
+      }
+    </script>
+
+    <div class="intro_bg">
+      <div class="header" id="link_header">
+        <div class="logo">
+          <a onclick="window.location.reload()"
+            ><div class="logo_title">Ticketflix</div></a
+          >
+        </div>
+        <ul class="nav">
+          <li><a href="#link_moiveList">영화 목록</a></li>
+          <li><a href="#link_movieTicket">마이 페이지</a></li>
+          <li><a href="#link_userEval">영화 후기</a></li>
+          <li><button onclick="logout()">로그아웃</button></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="boxoffice">
+      <h1>오늘의 박스오피스 순위</h1>
+      <ul id="boxOfficeList"></ul>
+    </div>
+
+    <div class="search-container">
+      <h2>영화 검색</h2>
+      <form id="searchForm">
+        <select id="searchType">
+          <option value="title">제목</option>
+          <option value="director">감독</option>
+          <option value="actor">배우</option>
+        </select>
+        <input type="text" id="searchQuery" placeholder="검색어를 입력하세요" />
+        <button type="submit">검색</button>
+      </form>
+
+      <!-- 검색 모달창 -->
+      <div id="searchModal" style="display: none">
+        <h2>이 영화들을 찾으셨나요?</h2>
+        <div id="searchResults"></div>
+        <button onclick="closesearch()">닫기</button>
+      </div>
+    </div>
+
+    <div class="container" id="link_moiveList">
+      <h2>상영 중인 영화</h2>
+
+      <div class="movie_list">
+        <div class="movies-container">
+          <input
+            type="image"
+            width="170px"
+            height="221px"
+            src="img/파묘 포스터.webp"
+            alt="영화"
+            onclick="openPopup('파묘', '장재현', '김고은, 이도현', '미국 LA, 거액의 의뢰를 받은 무당 ‘화림’(김고은)과 ‘봉길’(이도현)은 기이한 병이 대물림되는 집안의 장손을 만난다. 조상의 묫자리가 화근임을 알아챈 ‘화림’은 이장을 권하고, 돈 냄새를 맡은 최고의 풍수사 ‘상덕’(최민식)과 장의사 ‘영근’(유해진)이 합류한다. “전부 잘 알 거야… 묘 하나 잘못 건들면 어떻게 되는지” 절대 사람이 묻힐 수 없는 악지에 자리한 기이한 묘. ‘상덕’은 불길한 기운을 느끼고 제안을 거절하지만, ‘화림’의 설득으로 결국 파묘가 시작되고…. 나와서는 안될 것이 나왔다.')"
+          />
+          <div class="movie_title">파묘</div>
+        </div>
+
+        <div class="movies-container">
+          <input
+            type="image"
+            width="170px"
+            height="221px"
+            src="img/범죄도시4 포스터.webp"
+            alt="영화"
+            onclick="openPopup('범죄도시4', '허명행', '마동석, 김무열', '신종 마약 사건 3년 뒤, 괴물형사 ‘마석도’(마동석)와 서울 광수대는 배달앱을 이용한 마약 판매 사건을 수사하던 중 수배 중인 앱 개발자가 필리핀에서 사망한 사건이 대규모 온라인 불법 도박 조직과 연관되어 있음을 알아낸다. 필리핀에 거점을 두고 납치, 감금, 폭행, 살인 등으로 대한민국 온라인 불법 도박 시장을 장악한 특수부대 용병 출신의 빌런 ‘백창기’(김무열)와 한국에서 더 큰 판을 짜고 있는 IT업계 천재 CEO ‘장동철’(이동휘). ‘마석도’는 더 커진 판을 잡기 위해 ‘장이수’(박지환)에게 뜻밖의 협력을 제안하고 광역수사대는 물론, 사이버수사대까지 합류해 범죄를 소탕하기 시작하는데… 나쁜 놈 잡는데 국경도 영역도 제한 없다! 업그레이드 소탕 작전! 거침없이 싹 쓸어버린다!')"
+          />
+          <div class="movie_title">범죄도시4</div>
+        </div>
+
+        <div class="movies-container">
+          <input
+            type="image"
+            width="170px"
+            height="221px"
+            src="img/하이큐 쓰결전 포스터.webp"
+            alt="영화"
+            onclick="openPopup('극장판 하이큐!! 쓰레기장의 결전', '미츠나카 스스무', 'CV 무라세 아유무, CV 이시카와 카이토', '봄철 고교 배구대회 1회전과 2회전에서 우승 후보를 차례로 꺾은 카라스노 고등학교는 마침내 3회전에서 인연의 라이벌 네코마 고등학교와 맞붙게 된다. 공식 경기에서 처음으로 대결하는 두 고등학교, 통칭 까마귀 VS 고양이 ‘쓰레기장의 결전’. 약속의 땅에서 ‘한 번 더’가 없는 싸움이 드디어 시작된다!')"
+          />
+          <div class="movie_title">극장판 하이큐!! 쓰레기장의 결전</div>
+        </div>
+
+        <div class="movies-container">
+          <input
+            type="image"
+            width="170px"
+            height="221px"
+            src="img/혹성탈출 포스터.webp"
+            alt="영화"
+            onclick="openPopup('혹성탈출: 새로운 시대', '웨스 볼', '오웬 티그, 프레이아 앨런', '인류의 시대는 끝났고, 세상의 주인이 바뀌었다! 진화한 유인원과 퇴화된 인간들이 살아가는 땅. 유인원 리더 ‘프록시무스’는 완전한 군림을 위해 인간들을 사냥하며 자신의 제국을 건설한다. 한편, 또 다른 유인원 ‘노아’는 우연히 숨겨진 과거의 이야기와 ‘시저’의 가르침을 듣게 되고, 의문의 한 인간 소녀와 함께 자유를 향한 여정을 시작하게 되는데…')"
+          />
+          <div class="movie_title">혹성탈출: 새로운 시대</div>
+        </div>
+
+        <div class="movies-container">
+          <input
+            type="image"
+            width="170px"
+            height="221px"
+            src="img/쿵푸팬더4 포스터.webp"
+            alt="영화"
+            onclick="openPopup('쿵푸팬더4', '마이크 미첼, 스테파니 스타인', '잭 블랙, 아콰피나', '오랜만이지! 드림웍스 레전드 시리즈 마침내 컴백! 마침내 내면의 평화… 냉면의 평화…가 찾아왔다고 믿는 용의 전사 ‘포’ 이젠 평화의 계곡의 영적 지도자가 되고, 자신을 대신할 후계자를 찾아야만 한다. “이제 용의 전사는 그만둬야 해요?” 용의 전사로의 모습이 익숙해지고 새로운 성장을 하기보다 지금 이대로가 좋은 ‘포’ 하지만 모든 쿵푸 마스터들의 능력을 그대로 복제하는 강력한 빌런 ‘카멜레온’이 나타나고 그녀를 막기 위해 정체를 알 수 없는 쿵푸 고수 ‘젠’과 함께 모험을 떠나게 되는데… 포는 가장 강력한 빌런과 자기 자신마저 뛰어넘고 진정한 변화를 할 수 있을까?')"
+          />
+          <div class="movie_title">쿵푸팬더4</div>
+        </div>
+
+        <div class="movies-container">
+          <input
+            type="image"
+            width="170px"
+            height="221px"
+            src="img/남은인생10년 포스터.webp"
+            alt="영화"
+            onclick="openPopup('남은 인생 10년', '후지이 미치히토', '코마츠 나나, 사카구치 켄타로', '매일 밤, 눈 감기가 두려웠던 난치병 환자 ‘마츠리’. 매일 아침, 눈 뜨기가 두려웠던 외톨이 ‘카즈토’. 운명은 정반대에 있던 두 사람을 마주 보게 한다. 처음 만난 봄, 많이 웃은 여름, 더욱 깊어진 가을, 소중해서 아팠던 겨울까지. 남은 인생을 진정으로 사랑하게 해준 너에게 감사해.')"
+          />
+          <div class="movie_title">남은 인생 10년</div>
+        </div>
+      </div>
+
+      <!-- 영화 상세 정보 -->
+      <div class="movie-modal" id="movieModal">
+        <div class="movie-modal-content">
+          <span class="close-btn" onclick="closeModal()">&times;</span>
+          <h2 id="movieTitle"></h2>
+          <div id="movieDetails">
+            <p><strong>감독:</strong> <span id="movieDirector"></span></p>
+            <p><strong>출연:</strong> <span id="movieCast"></span></p>
+            <p><strong>줄거리:</strong> <span id="movieSummary"></span></p>
+
+            <p>
+              <strong><label for="datePicker">날짜 선택:</label></strong>
+              <input type="text" id="datePicker" readonly />
+            </p>
+
+            <p>
+              <strong><label for="timeSelect">시간 선택:</label></strong>
+              <select id="timeSelect" disabled>
+                <option value="">시간 선택</option>
+              </select>
+            </p>
+          </div>
+
+          <input type="button" class="submit-button" value="예매" />
+        </div>
+      </div>
+
+      <div class="container" id="link_movieTicket">
+        <h2>예매 내역</h2>
+        <ul id="reservationsList"></ul>
+        <button id="cancelAllButton" onclick="cancelAllReservations()">
+          전체 취소
+        </button>
+      </div>
+
+      <div class="container" id="link_userEval">
+        <h2>감상평을 공유해 주세요!</h2>
+        <form id="reviewForm" enctype="multipart/form-data">
+          <div class="input-container">
+            <div class="inline-inputs">
+              <label for="movieSelect">관람한 영화:</label>
+              <select id="movieSelect" name="movie">
+                <!-- 영화 목록은 서버에서 동적으로 로드 -->
+              </select>
+              <input type="file" id="fileUpload" />
+            </div>
+            <textarea
+              cols="30"
+              rows="10"
+              id="content"
+              placeholder="관람한 영화는 어땠나요?"
+            ></textarea>
+          </div>
+          <button type="button" id="save" onclick="saveContent()">저장</button>
+        </form>
+        <pre id="selected-value"></pre>
+      </div>
+
+      <div class="container">
+        <h2>리뷰 목록</h2>
+        <form>
+          <label for="movieReviewSelect"
+            >어떤 영화의 후기가 궁금하신가요?</label
+          >
+          <select id="movieReviewSelect" name="movie" onchange="fetchReviews()">
+            <!-- 영화 목록은 서버에서 동적으로 로드 -->
+          </select>
+        </form>
+        <ul id="reviewsList"></ul>
+        <button type="button" id="delete" onclick="deleteAllReviews()">
+          전체 삭제
+        </button>
+      </div>
+
+      <!-- 리뷰 수정 팝업 -->
+      <div id="editPopup" style="display: none">
+        <div class="popup-content">
+          <span class="close-btn" onclick="closeEditPopup()">&times;</span>
+          <h2>리뷰 수정</h2>
+          <input type="hidden" id="editReviewId" />
+          <p><strong>영화 제목:</strong> <span id="editMovieTitle"></span></p>
+          <div class="edit-container">
+            <img
+              id="existingFile"
+              src=""
+              alt="Existing File"
+              style="display: none; max-width: 100px; margin-top: 10px"
+            />
+            <input type="file" id="editFileUpload" />
+          </div>
+          <textarea
+            cols="20"
+            rows="10"
+            id="editContent"
+            placeholder="수정할 내용을 입력하세요"
+          ></textarea>
+          <button type="button" onclick="updateContent()">수정 완료</button>
+        </div>
+      </div>
+
+      <script></script>
+
+      <!-- 영화 검색 -->
+      <script>
+        document.getElementById("searchForm").onsubmit = async function (
+          event
+        ) {
+          event.preventDefault();
+          const searchQuery = document.getElementById("searchQuery").value;
+          const searchType = document.getElementById("searchType").value;
+
+          try {
+            const response = await fetch(
+              `/search?${searchType}=${encodeURIComponent(searchQuery)}`
+            );
+            if (!response.ok) {
+              throw new Error(`Failed to fetch data: ${response.statusText}`);
+            }
+            const results = await response.json();
+            displayResults(results);
+          } catch (error) {
+            console.error("Error fetching search results:", error);
+            alert("Error fetching search results: " + error.message);
+          }
+        };
+
+        function displayResults(results) {
+          const resultsContainer = document.getElementById("searchResults");
+          resultsContainer.innerHTML = "";
+
+          if (results.length === 0) {
+            const noResultsMessage = document.createElement("p");
+            noResultsMessage.textContent = "검색 결과가 없습니다.";
+            resultsContainer.appendChild(noResultsMessage);
+          } else {
+            results.forEach((movie) => {
+              const movieDiv = document.createElement("div");
+              movieDiv.classList.add("movieResult");
+
+              const titleElement = document.createElement("h3");
+              titleElement.textContent = movie.title;
+              movieDiv.appendChild(titleElement);
+
+              const directorElement = document.createElement("p");
+              directorElement.innerHTML = `<strong>감독:</strong> ${movie.director}`;
+              movieDiv.appendChild(directorElement);
+
+              const actorElement = document.createElement("p");
+              actorElement.innerHTML = `<strong>배우:</strong> ${movie.actor.join(
+                ", "
+              )}`;
+              movieDiv.appendChild(actorElement);
+
+              resultsContainer.appendChild(movieDiv);
+            });
+          }
+
+          opensearch();
+        }
+      </script>
+
+      <script>
+        let movieData = [];
+
+        $(document).ready(function () {
+          $.getJSON("/reviews.json", function (data) {
+            console.log("JSON data loaded:", data);
+            movieData = data;
+
+            data.forEach((movie) => {
+              $("#movieSelect, #movieReviewSelect").append(
+                new Option(movie.title, movie.title)
+              );
+            });
+
+            // 페이지 로드 시 기본 선택된 영화로 리뷰 생성
+            const defaultMovie = "기생충";
+            $("#movieReviewSelect").val(defaultMovie);
+            fetchReviews();
+
+            $("#movieSelect").change(function () {
+              const selectedTitle = $(this).val();
+              const selectedMovie = movieData.find(
+                (movie) => movie.title === selectedTitle
+              );
+              if (selectedMovie) {
+                $("#selected-value").text(
+                  `Title: ${selectedMovie.title}\nDirector: ${
+                    selectedMovie.director
+                  }\nActors: ${selectedMovie.actor.join(", ")}`
+                );
+              } else {
+                $("#selected-value").text("");
+              }
+            });
+
+            $("#movieReviewSelect").change(function () {
+              fetchReviews();
+            });
+          }).fail(function (jqxhr, textStatus, error) {
+            console.error(
+              "An error occurred while loading the JSON file:",
+              textStatus,
+              error
+            );
+          });
+        });
+
+        function saveContent() {
+          const selectedTitle = $("#movieSelect").val();
+          const reviewContent = $("#content").val();
+          const fileInput = $("#fileUpload")[0];
+          const file = fileInput.files[0];
+
+          if (!selectedTitle || !reviewContent) {
+            alert("영화와 감상평을 모두 입력해 주세요.");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("title", selectedTitle);
+          formData.append("content", reviewContent);
+          if (file) {
+            formData.append("file", file);
+          }
+
+          $.ajax({
+            url: "/saveReview",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+              alert("감상평이 저장되었습니다.");
+              fetchReviews(); // 리뷰 목록 갱신
+            },
+            error: function (jqxhr, textStatus, error) {
+              console.error("An error occurred:", textStatus, error);
+              alert("감상평 저장에 실패했습니다.");
+            },
+          });
+        }
+
+        function fetchReviews() {
+          const selectedTitle = $("#movieReviewSelect").val();
+          if (!selectedTitle) {
+            $("#reviewsList").empty();
+            return;
+          }
+
+          $.get(
+            `/reviews?title=${encodeURIComponent(selectedTitle)}`,
+            function (reviews) {
+              const reviewsList = $("#reviewsList");
+              reviewsList.empty();
+              if (reviews.length === 0) {
+                reviewsList.append("<li>리뷰가 존재하지 않습니다</li>");
+              } else {
+                reviews.forEach((review) => {
+                  const listItem = $("<li></li>");
+
+                  if (review.file) {
+                    listItem.append(
+                      `<img src="/uploads/${review.file}" alt="Review Image" width="100%">`
+                    );
+                  }
+                  listItem.append(`<p>${review.content}</p>`);
+                  listItem.append(`
+                    <button onclick="openEditPopup('${review.id}', '${selectedTitle}', '${review.content}', '${review.file}')">수정</button>
+                    <button onclick="deleteReview('${selectedTitle}', '${review.id}')">삭제</button>
+                `);
+                  reviewsList.append(listItem);
+                });
+              }
+            }
+          ).fail(function (jqxhr, textStatus, error) {
+            console.error(
+              "An error occurred while fetching the reviews:",
+              textStatus,
+              error
+            );
+          });
+        }
+
+        function deleteReview(title, reviewId) {
+          if (confirm("정말 이 리뷰를 삭제하시겠습니까?")) {
+            // 서버에서 현재 사용자가 해당 리뷰의 작성자인지 확인
+            $.get(
+              `/verifyReviewAuthor?reviewId=${reviewId}`,
+              function (response) {
+                if (response.isAuthor) {
+                  // 작성자가 맞다면 삭제 가능
+                  $.ajax({
+                    url: `/review?title=${encodeURIComponent(
+                      title
+                    )}&reviewId=${reviewId}`,
+                    type: "DELETE",
+                    success: function (response) {
+                      alert("리뷰가 삭제되었습니다.");
+                      fetchReviews(); // 리뷰 목록 갱신
+                    },
+                    error: function (jqxhr, textStatus, error) {
+                      console.error(
+                        "An error occurred while deleting the review:",
+                        textStatus,
+                        error
+                      );
+                      alert("리뷰 삭제에 실패했습니다.");
+                    },
+                  });
+                } else {
+                  alert("이 리뷰를 삭제할 권한이 없습니다.");
+                }
+              }
+            ).fail(function (jqxhr, textStatus, error) {
+              console.error(
+                "An error occurred while verifying the author:",
+                textStatus,
+                error
+              );
+              alert("작성자 확인 중 오류가 발생했습니다.");
+            });
+          }
+        }
+
+        function deleteAllReviews() {
+          const selectedTitle = $("#movieReviewSelect").val();
+          if (!selectedTitle) {
+            alert("영화를 선택해 주세요.");
+            return;
+          }
+
+          // 서버에서 현재 사용자가 모든 리뷰의 작성자인지 확인
+          $.get(
+            `/verifyReviewAuthor?title=${encodeURIComponent(selectedTitle)}`,
+            function (response) {
+              if (response.isAuthor) {
+                // 작성자가 맞다면 삭제 가능
+                $.ajax({
+                  url: `/reviews?title=${encodeURIComponent(selectedTitle)}`,
+                  type: "DELETE",
+                  success: function (response) {
+                    alert("모든 리뷰가 삭제되었습니다.");
+                    fetchReviews(); // 리뷰 목록 갱신
+                  },
+                  error: function (jqxhr, textStatus, error) {
+                    console.error(
+                      "An error occurred while deleting the reviews:",
+                      textStatus,
+                      error
+                    );
+                    alert("리뷰 삭제에 실패했습니다.");
+                  },
+                });
+              } else {
+                alert("이 영화의 모든 리뷰를 삭제할 권한이 없습니다.");
+              }
+            }
+          ).fail(function (jqxhr, textStatus, error) {
+            console.error(
+              "An error occurred while verifying the author:",
+              textStatus,
+              error
+            );
+            alert("작성자 확인 중 오류가 발생했습니다.");
+          });
+        }
+
+        function openEditPopup(reviewId, title, content, file) {
+          $("#editReviewId").val(reviewId);
+          $("#editMovieTitle").text(title);
+          $("#editContent").val(content);
+          $("#editFileUpload").val("");
+
+          if (file) {
+            $("#existingFile").attr("src", `/uploads/${file}`).show();
+          } else {
+            $("#existingFile").hide();
+          }
+
+          // 서버에서 현재 사용자가 해당 리뷰의 작성자인지 확인
+          $.get(
+            `/verifyReviewAuthor?reviewId=${reviewId}`,
+            function (response) {
+              if (response.isAuthor) {
+                // 작성자가 맞다면 수정 가능
+                $("#editPopup").show();
+              } else {
+                alert("이 리뷰를 수정할 권한이 없습니다.");
+              }
+            }
+          ).fail(function (jqxhr, textStatus, error) {
+            console.error(
+              "An error occurred while verifying the author:",
+              textStatus,
+              error
+            );
+            alert("작성자 확인 중 오류가 발생했습니다.");
+          });
+        }
+
+        function closeEditPopup() {
+          $("#editPopup").hide();
+        }
+
+        function updateContent() {
+          const reviewId = $("#editReviewId").val();
+          const title = $("#editMovieTitle").text();
+          const content = $("#editContent").val();
+          const fileInput = $("#editFileUpload")[0];
+          const file = fileInput.files[0];
+
+          if (!title || !content || !reviewId) {
+            alert("모든 정보를 입력해 주세요.");
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append("reviewId", reviewId);
+          formData.append("title", title);
+          formData.append("content", content);
+          if (file) {
+            formData.append("file", file);
+          }
+
+          $.ajax({
+            url: "/updateReview",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+              alert("감상평이 수정되었습니다.");
+              closeEditPopup();
+              fetchReviews(); // 리뷰 목록 갱신
+            },
+            error: function (jqxhr, textStatus, error) {
+              console.error("An error occurred:", textStatus, error);
+              alert("감상평 수정에 실패했습니다.");
+            },
+          });
+        }
+      </script>
+
+      <!-- 지도 생성 -->
+      <div class="container">
+        <h2>영화관 위치</h2>
+        <div id="map" style="width: 100%; height: 350px"></div>
+
+        <script
+          type="text/javascript"
+          src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ee2f5663752af44d32b299f44dadf9e5"
+        ></script>
+
+        <script>
+          var mapContainer = document.getElementById("map"), // 지도를 표시할 div
+            mapOption = {
+              center: new kakao.maps.LatLng(33.450701, 126.570667), // 지도의 중심 좌표
+              level: 5, // 지도의 확대 레벨
+            };
+
+          var map = new kakao.maps.Map(mapContainer, mapOption);
+
+          // HTML5의 geolocation으로 사용할 수 있는지 확인
+          if (navigator.geolocation) {
+            // GeoLocation을 이용해서 접속 위치 확인
+            navigator.geolocation.getCurrentPosition(function (position) {
+              var lat = position.coords.latitude, // 위도
+                lon = position.coords.longitude; // 경도
+
+              var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성
+                message = '<div style="padding:5px;">내 위치</div>'; // 인포윈도우에 표시될 내용
+
+              // 마커와 인포윈도우를 표시
+              displayMarker(locPosition, message);
+            });
+          } else {
+            // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용 설정
+
+            var locPosition = new kakao.maps.LatLng(33.450701, 126.570667),
+              message = "geolocation을 사용할 수 없어요...";
+
+            displayMarker(locPosition, message);
+          }
+
+          // 지도에 마커와 인포윈도우를 표시하는 함수
+          function displayMarker(locPosition, message) {
+            // 마커를\ 생성
+            var marker = new kakao.maps.Marker({
+              map: map,
+              position: locPosition,
+            });
+
+            var iwContent = message, // 인포윈도우에 표시할 내용
+              iwRemoveable = true;
+
+            // 인포윈도우 생성
+            var infowindow = new kakao.maps.InfoWindow({
+              content: iwContent,
+              removable: iwRemoveable,
+            });
+
+            // 인포윈도우를 마커 위에 표시
+            infowindow.open(map, marker);
+
+            // 지도 중심좌표를 접속 위치로 변경
+            map.setCenter(locPosition);
+          }
+        </script>
+
+        <script>
+          function addCinemaMarker() {
+            // 마커가 표시될 위치
+            var markerPosition = new kakao.maps.LatLng(
+              37.63057210249628,
+              127.07859297592505
+            );
+            var message = '<div style="padding:5px;">영화관</div>';
+
+            // 마커 생성
+            var marker = new kakao.maps.Marker({
+              position: markerPosition,
+            });
+            var markerImage = new kakao.maps.MarkerImage(
+              "img/free-icon-pop-corn-3616321.png",
+              new kakao.maps.Size(31, 35),
+              new kakao.maps.Point(13, 34)
+            );
+            marker.setImage(markerImage);
+
+            // 마커가 지도 위에 표시되도록 설정
+            marker.setMap(map);
+
+            // 인포윈도우를 생성
+            var infowindow = new kakao.maps.InfoWindow({
+              content: message,
+              removable: true,
+            });
+
+            // 인포윈도우를 마커 위에 표시
+            infowindow.open(map, marker);
+          }
+
+          // 영화관 마커 추가
+          addCinemaMarker();
+        </script>
+      </div>
+    </div>
+
+    <footer>
+      <div>IISE</div>
+      <div>
+        project <br />
+        Team 1 :
+        <a href="https://github.com/users/nhyxx/projects/2" target="_blank"
+          >github</a
+        >
+        <br />
+        Copyright 2024. @webp All Rights Reserved. <br />
+      </div>
+    </footer>
+  </body>
+</html>

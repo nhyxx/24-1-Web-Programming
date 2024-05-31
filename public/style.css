@@ -1,0 +1,707 @@
+body {
+    font-family: "Noto Sans KR", sans-serif;
+    margin: 0;
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1, h2 {
+    color: #333;
+    text-align: center;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+/* 네비게이션 */
+.intro_bg {
+    /* background-color: #f5f5f5; */
+    width: 100%;
+    height: 718px;
+    height: 86px;
+
+    z-index: 1000;
+    top: 0;
+}
+
+.header {
+    display: flex;
+    position: fixed; 
+
+    width: 1280px;
+    margin: auto;
+    height: 86px;
+
+    /* background-color: #f5f5f5; */
+    background-color: #f5f5f5;
+
+    justify-content: space-between; 
+    align-items: center; 
+    width: 100%;
+    height: 86px;
+
+    padding: 0 20px; 
+    box-sizing: border-box;
+}
+
+.nav {
+    display: flex;
+    align-items: center; 
+    list-style: none; 
+    padding: 0; 
+}
+
+.nav > li {
+    margin-left: 30px; 
+}
+
+.nav > li > a {
+    text-decoration: none;  /* 밑줄 제거 */
+    color: black;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo .logo_title {
+        margin-left: 120px;
+  
+        width: 354px;
+        height: 97px;
+
+        font-style: italic;
+        font-weight: 900;
+        font-size: 30px;
+        line-height: 100px;
+       
+        letter-spacing: -0.04em;
+  
+        color: #000000;
+        display: inline;
+
+        line-height: 95px; 
+      }
+
+
+.boxoffice {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+    max-height: 400px; 
+    overflow-y: hidden; 
+    position: fixed; 
+    top: 95px;
+    left: 25px; 
+    z-index: 1000; 
+
+    font-size: 13px;
+}
+
+.box-office-item,
+.reservation-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.box-office-rank {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.reservation-movie-title {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.reservation-details,
+.reservation-date {
+    margin-top: 5px;
+}
+
+button {
+    font-family: "Noto Sans KR", sans-serif;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button.btn-cancel {
+    background-color: #f44336;
+    margin-left: 10px;
+}
+
+button.btn-cancel:hover {
+    background-color: #e53935;
+}
+
+#cancelAllButton {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#cancelAllButton:hover {
+    background-color: #e53935;
+}
+
+.container  {
+    border: 1px solid #ddd;
+    max-width: 800px;
+    margin: 20px auto;
+    margin-top: 95px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+}
+
+.input-container {
+    display: flex;
+    margin-bottom: 10px;
+
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input-container input[type="file"] {
+
+    font-family: "Noto Sans KR", sans-serif;
+    margin-left: auto;
+}
+
+textarea {
+    font-family: "Noto Sans KR", sans-serif;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: block;
+}
+
+#save {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#save:hover {
+    background-color: #0056b3;
+}
+
+.search-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    max-height: 400px; 
+
+    position: fixed; 
+    top: 95px; 
+    right: 25px;
+    z-index: 1000; 
+    
+    font-size: 13px;
+}
+
+.search-container input[type="search"] {
+    padding: 10px;
+    margin-top: 10px;
+    width: 60%;
+    max-width: 400px;
+}
+
+.search-container input[type="submit"] {
+    padding: 10px;
+    margin-top: 10px;
+    margin-left: 10px;
+    width: 100px;
+}
+
+.movie_list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.movies-container {
+    margin: 10px;
+    flex: 1 1 calc(33.333% - 20px);
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.movie_title {
+    margin-top: 5px;
+    font-family: "Noto Sans KR", sans-serif;
+    font-weight: 600;
+    font-size: large;
+}
+
+.movies-container img {
+    width: 100%;
+    height: auto;
+}
+
+.submit-button {
+    margin-top: 7px;
+    font-family: "Noto Sans KR", sans-serif;
+    width: 55px;
+    height: 30px;
+
+    background-color: #e4e4e4;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.submit-button:hover {
+    background-color: #5b5b5b;
+    color: white;
+
+}
+
+@media (max-width: 768px) {
+    .movies-container {
+        flex: 1 1 calc(50% - 20px);
+    }
+}
+
+@media (max-width: 480px) {
+    .movies-container {
+        flex: 1 1 100%;
+    }
+}
+
+
+/* 영화 상세 정보 창  */
+
+/* 영화 목록 이미지 클릭 시 모달 팝업 스타일링 */
+.movie-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 80%;
+    max-height: 80%;
+    overflow: auto;
+    border: 1px solid #ddd;
+    z-index: 1000;
+}
+
+
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+#searchModal {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    padding: 20px;
+  }
+  
+  #searchResults {
+    background: white;
+    margin: 10% auto; 
+    padding: 20px;
+    border-radius: 8px;
+
+  }
+
+/* 검색 컨테이너  */
+.search-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin: 20px auto;
+    text-align: center;
+}
+
+/* 검색 폼 */
+#searchForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#searchQuery, #searchType, #searchForm button {
+    font-family: "Noto Sans KR", sans-serif;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+#searchForm button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border: none;
+}
+
+#searchForm button:hover {
+    background-color: #0056b3;
+}
+
+/* 모달창 스타일 */
+#searchModal {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    width: 80%;
+    max-width: 500px;
+    z-index: 1000;
+
+}
+
+#searchResults {
+    margin-bottom: 20px;
+
+}
+
+#searchModal button {
+    padding: 10px 20px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#searchModal button:hover {
+    background-color: #ff3333;
+}
+
+/* 모달창 배경 스타일 */
+.modal-background {
+    display: none; /* 기본적으로 숨김 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+
+}
+
+.movieResult {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    padding: 10px;
+
+    
+}
+
+.movieResult h3 {
+    margin-top: 0;
+}
+
+.movieResult p {
+    margin-bottom: 5px;
+}
+
+.movieResult p:last-child {
+    margin-bottom: 0;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* 달력 위치 수정 */
+#datePicker {
+    position : relative;
+    display: inline-block;
+    margin-right: 10px;
+
+    display: inline-block;
+    font-family: "Noto Sans KR", sans-serif;
+
+}
+
+#timeSelect {
+    display: inline-block;
+    font-family: "Noto Sans KR", sans-serif;
+
+}
+
+
+/* 리뷰 작성 */
+#movieSelect, #movieReviewSelect {
+    font-family: "Noto Sans KR", sans-serif;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+    background-color: #fff;
+    color: #333;
+    appearance: none; 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    margin-left: 5px;
+
+}
+
+#movieSelect:focus {
+    border-color: #007BFF;
+    outline: none;
+}
+
+#fileUpload {
+    width: 68%;
+    font-family: "Noto Sans KR", sans-serif;
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+    color: #333;
+    background-color: #fff;
+
+}
+
+#fileUpload:focus {
+    border-color: #007BFF;
+    outline: none;
+}
+
+#editFileUpload  {
+    font-family: "Noto Sans KR", sans-serif;
+}
+
+#content {
+    width: 100;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+    color: #333;
+    background-color: #fff;
+    resize: vertical; /
+
+}
+
+.inline-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+    margin-bottom: 20px; 
+}
+
+/* 리뷰 목록 */
+#reviewsList {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    margin-top: 10px;
+}
+
+/* 리뷰 항목  */
+#reviewsList li {
+    display: flex;
+    align-items: flex-start;
+    background-color: #f9f9f9;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+
+}
+
+/* 리뷰 이미지 */
+#reviewsList li img {
+    max-width: 100px;
+    margin-right: 15px;
+    border-radius: 4px;
+    margin-top: 10px
+}
+
+/* 리뷰 내용 텍스트  */
+#reviewsList li p {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    text-align: left; 
+    flex-grow: 1; /* 남은 공간 차지 */
+}
+
+/* 버튼 컨테이너 */
+.button-container {
+    position: absolute;
+    bottom: 15px; 
+    right: 15px; 
+    display: flex;
+    gap: 10px; 
+}
+
+/* 리뷰 버튼 */
+#reviewsList li button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+#selected-value {
+    font-family: "Noto Sans KR", sans-serif;
+
+}
+
+
+#delete {
+    margin-top: 15px;
+}
+
+.popup-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    z-index: 1000;
+}
+
+.close-btn {
+    float: right;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.popup-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.edit-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 이미지와 파일 업로드 필드 사이의 간격 조정 */
+}
+
+#editContent {
+    width: 95%; 
+}
+
+#existingFile {
+    margin-top: 0;
+}
+
+footer {
+    display: flex;
+    padding: 30px;
+    font-size: 12px;
+    
+}
+
+footer > div > a {
+    text-decoration: none; 
+}
+
+footer > div:first-child {
+    flex: 3;
+    text-align: center;
+    color: #000000;
+
+}
+
+footer > div:last-child {
+    flex: 9;
+    color: #000;
+
+}
